@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishDetect AI | Панель Безопасности</title>
+
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            /* Palette */
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --primary: #3b82f6;
+            /* Blue */
+            --primary-hover: #2563eb;
+            --secondary-text: #6b7280;
+            --heading-text: #111827;
+            --safe: #10b981;
+            /* Emerald */
+            --danger: #ef4444;
+            /* Red */
+            --border-color: #e5e7eb;
+
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-focus: 0 0 0 3px rgba(59, 130, 246, 0.5);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--heading-text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Navbar --- */
+        .navbar {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--primary);
+        }
+
+        .brand i {
+            font-size: 1.5rem;
+        }
+
+        .nav-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            color: var(--secondary-text);
+            font-weight: 500;
+            background: #f9fafb;
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--safe);
+            border-radius: 50%;
+            box-shadow: 0 0 4px var(--safe);
+        }
+
+        /* --- Main Content --- */
+        .main-container {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+            box-sizing: border-box;
+        }
+
+        /* --- Hero / Input Section --- */
+        .hero-section {
+            text-align: center;
+            margin-bottom: 3rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.025em;
+        }
+
+        .hero-subtitle {
+            font-size: 1.125rem;
+            color: var(--secondary-text);
+            margin-bottom: 2rem;
+        }
+
+        .search-box-wrapper {
+            background: var(--card-bg);
+            padding: 8px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            gap: 10px;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .search-box-wrapper:focus-within {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-focus);
+            border-color: var(--primary);
+        }
+
+        .input-group {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            color: #9ca3af;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            border: none;
+            outline: none;
+            font-size: 1.125rem;
+            padding: 12px 12px 12px 48px;
+            color: var(--heading-text);
+            background: transparent;
+            font-family: inherit;
+        }
+
+        input[type="text"]::placeholder {
+            color: #9ca3af;
+        }
+
+        button.btn-analyze {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button.btn-analyze:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button.btn-analyze:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        /* --- Dashboard Grid --- */
+        .dashboard-grid {
+            display: none;
+            /* Hidden by default */
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-md);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-header {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--secondary-text);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Verdict Card (Full Width or Large) */
+        .verdict-card {
+            grid-column: span 12;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            padding: 2rem;
+            border-left: 8px solid transparent;
+            /* Dynamic color */
+        }
+
+        .verdict-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .verdict-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--secondary-text);
+        }
+
+        .verdict-value {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-top: 4px;
+        }
+
+        .verdict-icon {
+            font-size: 3rem;
+            opacity: 0.2;
+        }
+
+        /* Stats Card (Chart) */
+        .stats-card {
+            grid-column: span 4;
+            height: 350px;
+        }
+
+        .chart-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Details Card (Table) */
+        .details-card {
+            grid-column: span 8;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            text-align: left;
+            padding: 12px 4px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table th {
+            color: var(--secondary-text);
+            font-weight: 600;
+            font-size: 0.875rem;
+            width: 40%;
+        }
+
+        .data-table td {
+            font-weight: 500;
+            color: var(--heading-text);
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge-bool {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .badge-true {
+            background-color: #fee2e2;
+            color: #ef4444;
+        }
+
+        .badge-false {
+            background-color: #ecfdf5;
+            color: #10b981;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+
+            .stats-card,
+            .details-card {
+                grid-column: span 12;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .verdict-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+
+            .verdict-icon {
+                align-self: flex-end;
+            }
+
+            .navbar {
+                padding: 1rem;
+            }
+
+            .main-container {
+                padding: 2rem 1rem;
+            }
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--secondary-text);
+            font-size: 0.875rem;
+            border-top: 1px solid var(--border-color);
+            background: var(--card-bg);
+            margin-top: auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="brand">
+            <i class="fa-solid fa-shield-halved"></i>
+            PhishDetect AI
+        </div>
+        <div class="nav-status">
+            <div class="status-dot"></div>
+            Система активна
+        </div>
+    </nav>
+
+    <div class="main-container">
+
+        <!-- Hero -->
+        <div class="hero-section">
+            <h1 class="hero-title">Безопасный Интернет.</h1>
+            <p class="hero-subtitle">Мгновенный анализ ссылок с помощью ИИ для защиты от фишинга.</p>
+
+            <div class="search-box-wrapper">
+                <div class="input-group">
+                    <i class="fa-solid fa-link input-icon"></i>
+                    <input type="text" id="urlInput"
+                        placeholder="Вставьте подозрительную ссылку (например, tbank.ru)...">
+                </div>
+                <button onclick="scanUrl()" id="scanButton" class="btn-analyze">
+                    Сканировать
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard" class="dashboard-grid">
+
+            <!-- Verdict -->
+            <div id="verdictCard" class="card verdict-card">
+                <div class="verdict-content">
+                    <span class="verdict-label">Вердикт системы</span>
+                    <span id="verdictValue" class="verdict-value">БЕЗОПАСНО</span>
+                    <div id="verdictSub" style="color: var(--secondary-text); margin-top: 4px;">Угроз не обнаружено.
+                    </div>
+                </div>
+                <i id="verdictIcon" class="fa-solid fa-check-circle verdict-icon"></i>
+            </div>
+
+            <!-- Stats -->
+            <div class="card stats-card">
+                <div class="card-header">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    Уровень Доверия
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="confidenceChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Details -->
+            <div class="card details-card">
+                <div class="card-header">
+                    <i class="fa-solid fa-list-ul"></i>
+                    Технические индикаторы
+                </div>
+                <table class="data-table">
+                    <tbody id="featuresTableBody">
+                        <!-- Dynamic Rows -->
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+    </div>
+
+    <footer class="footer">
+        &copy; 2025 PhishDetect AI Security. Все системы работают исправно.
+    </footer>
+
+    <script>
+        let confidenceChart = null;
+
+        // Dictionary for Feature Translation
+        const featureTranslations = {
+            'url_length': 'Длина URL',
+            'has_ip': 'IP вместо домена',
+            'at_symbol': 'Символ @ в URL',
+            'double_slash': 'Двойной слэш //',
+            'is_shortened': 'Сокращенная ссылка',
+            'has_dash': 'Дефис в домене',
+            'subdomain_count': 'Количество поддоменов',
+            'domain_length': 'Длина домена',
+            'digit_ratio': 'Доля цифр в домене',
+            'brand_in_domain': 'Упоминание бренда',
+            'has_https': 'HTTPS шифрование',
+            'domain_age': 'Возраст домена (дней)',
+            'is_typosquatting': 'Тайпосквоттинг',
+            'script_count': 'Количество скриптов',
+            'iframe_count': 'Количество iFrames',
+            'phishing_keywords': 'Фишинговые слова',
+            'form_action_external': 'Внешние формы',
+            'has_forms': 'Наличие форм',
+            'has_password_field': 'Поле для пароля'
+        };
+
+        // Dictionary for Risk Levels
+        const riskTranslations = {
+            'SAFE': 'БЕЗОПАСНЫЙ',
+            'LOW': 'НИЗКИЙ',
+            'MEDIUM': 'СРЕДНИЙ',
+            'HIGH': 'ВЫСОКИЙ',
+            'CRITICAL': 'КРИТИЧЕСКИЙ',
+            'UNKNOWN': 'НЕИЗВЕСТНЫЙ'
+        };
+
+        // Render Chart
+        function initChart(confidence, isPhishing) {
+            const ctx = document.getElementById('confidenceChart').getContext('2d');
+
+            if (confidenceChart) {
+                confidenceChart.destroy();
+            }
+
+            // Colors
+            const colorSafe = '#10b981';   // Emerald 500
+            const colorDanger = '#ef4444'; // Red 500
+            const colorEmpty = '#e5e7eb';  // Gray 200
+
+            const mainColor = isPhishing ? colorDanger : colorSafe;
+            const percentage = (confidence * 100).toFixed(1);
+
+            confidenceChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Вероятность', 'Остаток'],
+                    datasets: [{
+                        data: [percentage, 100 - percentage],
+                        backgroundColor: [
+                            mainColor,
+                            colorEmpty
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '80%', // Thinner ring
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    },
+                    animation: {
+                        animateScale: true,
+                        animateRotate: true
+                    }
+                },
+                plugins: [{
+                    id: 'textCenter',
+                    beforeDraw: function (chart) {
+                        var width = chart.width,
+                            height = chart.height,
+                            ctx = chart.ctx;
+
+                        ctx.restore();
+                        var fontSize = (height / 120).toFixed(2);
+                        ctx.font = "bold " + fontSize + "em Inter";
+                        ctx.textBaseline = "middle";
+                        ctx.fillStyle = "#111827";
+
+                        var text = percentage + "%",
+                            textX = Math.round((width - ctx.measureText(text).width) / 2),
+                            textY = height / 2;
+
+                        ctx.fillText(text, textX, textY);
+
+                        // Label below percentage
+                        ctx.font = "500 " + (height / 300).toFixed(2) + "em Inter";
+                        ctx.fillStyle = "#6b7280";
+                        var label = "Риск";
+                        var labelX = Math.round((width - ctx.measureText(label).width) / 2);
+                        var labelY = height / 2 + 25;
+                        ctx.fillText(label, labelX, labelY);
+
+                        ctx.save();
+                    }
+                }]
+            });
+        }
+
+        async function scanUrl() {
+            const urlInput = document.getElementById('urlInput');
+            const url = urlInput.value.trim();
+            const button = document.getElementById('scanButton');
+            const dashboard = document.getElementById('dashboard');
+
+            if (!url) {
+                urlInput.focus();
+                return;
+            }
+
+            // UI Loading State
+            button.disabled = true;
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Сканирование...';
+
+            // Hide dashboard on re-scan to fade in again (optional)
+            // dashboard.style.display = 'none';
+
+            try {
+                const response = await fetch('/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const result = await response.json();
+
+                if (result.error) {
+                    alert('Ошибка: ' + result.error);
+                    return;
+                }
+
+                displayResult(result);
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Ошибка соединения. Сервер запущен?');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = 'Сканировать';
+            }
+        }
+
+        function displayResult(result) {
+            const dashboard = document.getElementById('dashboard');
+
+            // 1. Setup Verdict Card
+            const verdictCard = document.getElementById('verdictCard');
+            const verdictValue = document.getElementById('verdictValue');
+            const verdictSub = document.getElementById('verdictSub');
+            const verdictIcon = document.getElementById('verdictIcon');
+
+            // Translate Risk Level
+            const ruRisk = riskTranslations[result.risk_level] || result.risk_level;
+
+            if (result.is_phishing) {
+                verdictValue.textContent = 'ОБНАРУЖЕНА УГРОЗА';
+                verdictSub.textContent = `Обнаружен высокий уровень риска (${ruRisk})`;
+                verdictCard.style.borderLeftColor = '#ef4444';
+                verdictValue.style.color = '#ef4444';
+                verdictIcon.className = 'fa-solid fa-triangle-exclamation verdict-icon';
+                verdictIcon.style.color = '#ef4444';
+            } else {
+                verdictValue.textContent = 'БЕЗОПАСНАЯ ССЫЛКА';
+                verdictSub.textContent = 'Вредоносных признаков не найдено.';
+                verdictCard.style.borderLeftColor = '#10b981';
+                verdictValue.style.color = '#10b981';
+                verdictIcon.className = 'fa-solid fa-shield-check verdict-icon';
+                verdictIcon.style.color = '#10b981';
+            }
+
+            // 2. Setup Chart
+            initChart(result.confidence, result.is_phishing);
+
+            // 3. Setup Table
+            const tbody = document.getElementById('featuresTableBody');
+            tbody.innerHTML = '';
+
+            if (result.features) {
+                // Determine which keys to show (filter out boring ones if needed)
+                for (const [key, value] of Object.entries(result.features)) {
+                    const row = tbody.insertRow();
+                    const cellName = row.insertCell(0);
+                    const cellValue = row.insertCell(1);
+
+                    // Translate Key using formatting or fallback
+                    const translatedKey = featureTranslations[key] || key.replace(/_/g, ' ');
+                    cellName.textContent = translatedKey;
+
+                    // Prettify Value
+                    if (value === 1 || value === 0) {
+                        const isBad = (value === 1 && key !== 'has_https') || (value === 0 && key === 'has_https');
+                        const badgeClass = isBad ? 'badge-true' : 'badge-false'; // True usually means bad feature present
+                        const badgeText = (value === 1) ? 'Да' : 'Нет';
+
+                        // Specific logic for has_https (1 is good)
+                        if (key === 'has_https') {
+                            cellValue.innerHTML = value === 1
+                                ? '<span class="badge-bool badge-false" style="color:#10b981; bg-color:#ecfdf5">Да</span>' // Good
+                                : '<span class="badge-bool badge-true">Нет</span>'; // Bad
+                        } else {
+                            // Default logic: 1 is bad (e.g. is_phishing, has_ip)
+                            const styleClass = value === 1 ? 'badge-true' : 'badge-false';
+                            // In badge-false for generic features, we use neutral gray/green? Let's stick to green for "No" (good)
+                            cellValue.innerHTML = `<span class="badge-bool ${styleClass}">${badgeText}</span>`;
+                        }
+                    } else {
+                        cellValue.textContent = value;
+                    }
+                }
+            }
+
+            // Show Dashboard
+            dashboard.style.display = 'grid';
+
+            // Scroll to results
+            dashboard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    </script>
+</body>
+
+</html>

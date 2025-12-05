@@ -1,0 +1,12 @@
+requests
+beautifulsoup4
+whois
+python-whois
+scikit-learn
+pandas
+numpy
+joblib
+tldextract
+urllib3
+flask
+python-dotenv
