@@ -2,6 +2,7 @@ requests
 beautifulsoup4
 whois
 python-whois
+python-dateutil
 scikit-learn
 pandas
 numpy
@@ -10,3 +11,4 @@ tldextract
 urllib3
 flask
 python-dotenv
+aiogram
